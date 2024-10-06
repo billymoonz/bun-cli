@@ -1,7 +1,7 @@
 import { readdirSync } from "fs"
 import { join } from "path"
-import { Config } from "../utils/config"
-import { Command } from "./command"
+import { Config } from "@/utils/config"
+import { Command } from "@/core/command"
 
 export class CLI {
   static yamlConfig = new Config<{
