@@ -21,7 +21,7 @@ This repository provides a flexible CLI framework built with TypeScript and Bun.
 ### 1. Clone the Repository
 
 ```bash
-git clone http://github.com/billymoonz/bun-cli.git
+bunx create bun-cl1 [project_name]
 cd bun-cli
 ```
 
