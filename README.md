@@ -1,19 +1,20 @@
-# TypeScript/Bun CLI Template
+# TypeScript/Bun CLI with YAML Configuration
 
-This repository provides a template for building Command Line Interface (CLI) applications using TypeScript and Bun. It supports dynamically loading commands, parsing arguments and options, and is designed to be extensible for future commands.
+This repository provides a flexible CLI framework built with TypeScript and Bun. The framework includes dynamic command loading, argument parsing, and YAML-based configuration management. It is designed to be extensible and easy to use for building custom CLI applications.
 
 ## Features
 
-- **Dynamic Command Loading**: Commands are automatically loaded from the `commands` directory.
-- **Argument Parsing**: Command-line arguments are parsed into commands and options.
-- **Type Safety**: TypeScript ensures type safety for commands and options.
-- **Extensible**: Easily extend the CLI by adding new commands to the `commands` folder.
-- **Option Support**: Supports both flag-style options (`-flag`) and key-value options (`-option value`).
+- **Dynamic Command Loading**: Automatically loads available commands from the `commands` directory.
+- **Argument Parsing**: Supports parsing of arguments and options passed from the command line.
+- **TypeScript Support**: Ensures type safety and maintainability.
+- **YAML Configuration**: Uses a YAML file (`config.yml`) for managing configurations, such as enabling/disabling debugging.
+- **Extensible Architecture**: Easily extend the CLI by adding new commands to the `commands` folder.
+- **Option Support**: Handles both flag-style (`-flag`) and key-value options (`-option value`).
 
 ## Requirements
 
-- **Bun**: This CLI template is built to run using [Bun](https://bun.sh/). Make sure you have Bun installed before proceeding.
-- **TypeScript**: The template is written in TypeScript, so you'll need TypeScript support.
+- **Bun**: The CLI is built to run using [Bun](https://bun.sh/). Ensure that Bun is installed on your system.
+- **TypeScript**: The project is written in TypeScript, so TypeScript support is required for development.
 
 ## Getting Started
 
@@ -26,16 +27,17 @@ cd bun-cli
 
 ### 2. Directory Structure
 
-- `src/commands/`: Directory where individual command files are stored. Each file should define one command.
+The core of the CLI is organized as follows:
+
+- `src/commands/`: Holds individual command files. Each file defines one command by extending the `Command` class.
+- `src/config.ts`: Handles YAML-based configuration management.
 
 ### 3. Adding a New Command
 
-To add a new command, create a new file in the `src/commands/` directory. The command must extend the abstract `Command` class and implement the `onExecute()` method.
+To add a new command, create a file inside the `src/commands/` directory. The command must extend the `Command` class and implement the `onExecute()` method.
 
 ```typescript
 // src/commands/TestCommand.ts
-
-import { Command } from "../index"
 
 export default class TestCommand extends Command {
   constructor() {
@@ -64,78 +66,24 @@ For example:
 bun run src/index.ts test -name JohnDoe
 ```
 
-This will call the `test` command with the option `-name JohnDoe`.
+This executes the `test` command with the option `-name JohnDoe`.
 
-### 5. Main CLI Logic
+### 5. YAML Configuration Management
 
-The main entry point of the CLI is defined in `src/index.ts`. It reads arguments from the command line, dynamically loads available commands, and executes the matching command if found.
+The CLI uses a YAML-based configuration system to store and manage settings. The configuration file (`config.yml`) will be created automatically if it doesn’t exist.
+
+Default configuration (`config.yml`):
+
+```yaml
+DEBUGGING: false
+```
+
+You can access or modify configuration values in your commands:
 
 ```typescript
-import { readdirSync } from "fs"
-import { join } from "path"
-
-export abstract class Command {...}
-
-function main(args: string[]) {
-  let foundCommand: Command | null = null
-
-  const commandFiles = readdirSync(join(__dirname, "commands")).filter(
-    (file) => file.endsWith(".ts") || file.endsWith(".js")
-  )
-
-  for (const file of commandFiles) {
-    const { default: CommandFunction } = require(join(
-      __dirname,
-      "commands",
-      file
-    ))
-
-    if (CommandFunction && typeof CommandFunction === "function") {
-      const cmd = new CommandFunction()
-
-      if (cmd instanceof Command) {
-        const commandName = args[0].toLowerCase()
-        if (cmd.prefix === commandName || cmd.aliases.includes(commandName)) {
-          foundCommand = cmd
-          break
-        }
-      }
-    }
-  }
-
-  if (foundCommand) {
-    let commandArgs: string[] = []
-    const options = new Map<`-${string}`, string>()
-
-    for (let i = 1; i < args.length; i++) {
-      const arg = args[i]
-
-      if (arg.startsWith("-")) {
-        const optionName = arg
-        let optionValue = "true"
-
-        if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
-          optionValue = args[i + 1]
-          i++
-        }
-
-        if (foundCommand?.options.has(optionName as `-${string}`)) {
-          options.set(optionName as `-${string}`, optionValue)
-        } else {
-          console.log(`Invalid option: ${optionName}`)
-        }
-      } else {
-        commandArgs.push(arg)
-      }
-    }
-
-    foundCommand.onExecute(commandArgs, options)
-  } else {
-    console.log("Command not found.")
-  }
-}
-
-main(Bun.argv.splice(2))
+// Accessing and modifying config within a command
+const debugMode = CLI.yamlConfig.getValue("DEBUGGING")
+CLI.yamlConfig.setValue("DEBUGGING", true)
 ```
 
 ### 6. Command Structure
@@ -144,16 +92,12 @@ Each command must:
 
 - Extend the `Command` class.
 - Implement the `onExecute(args: string[], options: Map<`-${string}`, string>)` method.
-- Add valid options using `this.addOptions("-option")`.
+- Define valid options using `this.addOptions("-option")`.
 
 ### Example:
 
-You can create a new command like this:
-
 ```typescript
 // src/commands/GreetCommand.ts
-
-import { Command } from "../index"
 
 export default class GreetCommand extends Command {
   constructor() {
@@ -169,19 +113,123 @@ export default class GreetCommand extends Command {
 }
 ```
 
-Running the new command:
+Run this command with:
 
 ```bash
 bun run src/index.ts greet -name John -greeting Hi
 ```
 
-Would output:
+This will output:
 
 ```
 Hi, John!
 ```
 
-### 7. Customizing the CLI
+### 7. Main CLI Logic
 
-- To add new commands, simply create new classes in the `src/commands` directory.
-- Modify the `Command` class to suit your application's needs, adding methods like `validateOptions()` or `getHelp()` as necessary.
+The entry point for the CLI is located in `src/index.ts`. It loads available commands from the `commands` directory and parses the arguments/options from the command line.
+
+```typescript
+// src/index.ts
+
+import { readdirSync } from "fs"
+import { join } from "path"
+import { Config } from "./config"
+
+export abstract class Command {
+  public prefix: string
+  public aliases: string[]
+  public options: `-${string}`[] = []
+
+  constructor(prefix: string, ...aliases: string[]) {
+    this.prefix = prefix
+    this.aliases = aliases
+  }
+
+  addOptions(...options: `-${string}`[]): void {
+    this.options.push(...options)
+  }
+
+  abstract onExecute(args: string[], options: Map<`-${string}`, string>): void
+}
+
+export class CLI {
+  static yamlConfig = new Config<{
+    DEBUGGING: boolean
+  }>("config.yml", { DEBUGGING: false })
+
+  static execute(args: string[]): void {
+    if (args.length === 0) {
+      console.log("No command provided.")
+      return
+    }
+
+    const foundCommand = CLI.findCommand(args[0].toLowerCase())
+    if (foundCommand) {
+      const { commandArgs, options } = CLI.parseArgs(args, foundCommand)
+      foundCommand.onExecute(commandArgs, options)
+    } else {
+      console.log("Command not found.")
+    }
+  }
+
+  static findCommand(commandName: string): Command | null {
+    const commandFiles = readdirSync(join(__dirname, "commands")).filter(
+      (file) => file.endsWith(".ts") || file.endsWith(".js")
+    )
+    for (const file of commandFiles) {
+      const { default: CommandFunction } = require(join(
+        __dirname,
+        "commands",
+        file
+      ))
+      if (CommandFunction && typeof CommandFunction === "function") {
+        const cmd = new CommandFunction()
+        if (cmd instanceof Command) {
+          if (cmd.prefix === commandName || cmd.aliases.includes(commandName)) {
+            return cmd
+          }
+        }
+      }
+    }
+    return null
+  }
+
+  static parseArgs(
+    args: string[],
+    command: Command
+  ): { commandArgs: string[]; options: Map<`-${string}`, string> } {
+    let commandArgs: string[] = []
+    const options = new Map<`-${string}`, string>()
+    for (let i = 1; i < args.length; i++) {
+      const arg = args[i]
+      if (arg.startsWith("-")) {
+        const optionName = arg
+        let optionValue = "true"
+        if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
+          optionValue = args[i + 1]
+          i++
+        }
+        if (command.options.includes(optionName as `-${string}`)) {
+          options.set(optionName as `-${string}`, optionValue)
+        }
+      } else {
+        commandArgs.push(arg)
+      }
+    }
+    return { commandArgs, options }
+  }
+}
+
+function main(args: string[]): void {
+  CLI.execute(args)
+}
+
+main(Bun.argv.splice(2))
+```
+
+### 8. Customizing the CLI
+
+- Add new commands by creating classes in the `src/commands/` directory.
+- Customize the `Command` class to add new functionalities like validation or help messages.
+- Use the YAML config system to manage your CLI settings.

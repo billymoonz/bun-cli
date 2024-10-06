@@ -10,5 +10,9 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "js-yaml": "^4.1.0"
   }
 }
