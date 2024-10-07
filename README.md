@@ -23,12 +23,10 @@ bun cli <command> [options]
 1. Add a new file in `src/commands/`:
 
 ```typescript
-import { Command } from "../core/command"
+import { Command } from "@/core/command"
 
 export default class HelloCommand extends Command {
-  constructor() {
-    super("hello")
-  }
+  prefix = "hello"
   onExecute() {
     console.log("Hello, world!")
   }

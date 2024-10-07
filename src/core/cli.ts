@@ -1,13 +1,8 @@
 import { readdirSync, readFileSync } from "fs"
 import { join } from "path"
-import { Config } from "@/utils/config"
 import { Command } from "@/core/command"
 
 export class CLI {
-  static yamlConfig = new Config<{
-    DEBUGGING: boolean
-  }>("config.yml", { DEBUGGING: false })
-
   static execute(args: string[]): void {
     if (args.length === 0) {
       console.log("No command provided.")
@@ -74,20 +69,20 @@ export class CLI {
   static parseArgs(
     args: string[],
     command: Command
-  ): { commandArgs: string[]; options: Map<`-${string}`, string> } {
+  ): { commandArgs: string[]; options: Record<string, string> } {
     let commandArgs: string[] = []
-    const options = new Map<`-${string}`, string>()
+    const options = {} as Record<string, string>
     for (let i = 1; i < args.length; i++) {
       const arg = args[i]
       if (arg.startsWith("-")) {
-        const optionName = arg
+        const optionName = arg.substring(1)
         let optionValue = "true"
         if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
           optionValue = args[i + 1]
           i++
         }
-        if (command.options.includes(optionName as `-${string}`)) {
-          options.set(optionName as `-${string}`, optionValue)
+        if (command.options.includes(optionName)) {
+          options[optionName] = optionValue
         }
       } else {
         commandArgs.push(arg)
