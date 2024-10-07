@@ -9,9 +9,5 @@ export abstract class Command {
     this.aliases = aliases
   }
 
-  addOptions(...options: string[]) {
-    this.options.push(...options)
-  }
-
   abstract onExecute(args: string[], options: Record<string, string>): void
 }
