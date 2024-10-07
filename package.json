@@ -2,17 +2,14 @@
   "name": "cli",
   "version": "1.0.0",
   "module": "src/index.ts",
-  "type": "module",
-  "scripts": {
-    "cli": "bun src/index.ts"
-  },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "dependencies": {
-    "@types/js-yaml": "^4.0.9"
-  }
+  "scripts": {
+    "cli": "bun src/index.ts"
+  },
+  "type": "module"
 }
