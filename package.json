@@ -9,7 +9,8 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "cli": "bun src/index.ts"
+    "cli": "bun src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --minify"
   },
   "type": "module"
 }

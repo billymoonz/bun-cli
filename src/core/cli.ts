@@ -1,12 +1,12 @@
 import { existsSync, readdirSync, readFileSync } from "fs"
-import { join } from "path"
+import path from "path"
 import { Command } from "@/core/command"
 
 export class CLI {
   // === High-Level Command Execution ===
   static execute(args: string[]): void {
     if (args.length === 0) {
-      console.log(
+      console.error(
         "No command provided. Use 'help' to see the list of available commands."
       )
       return
@@ -16,7 +16,7 @@ export class CLI {
       const { commandArgs, options } = CLI.parseArgs(args, foundCommand)
       foundCommand.onExecute(commandArgs, options)
     } else {
-      console.log("Command not found.")
+      console.error("Command not found.")
     }
   }
 
@@ -32,7 +32,7 @@ export class CLI {
   }
 
   static getCommands(): Command[] {
-    const commandsDir = join(__dirname, "..", "commands")
+    const commandsDir = path.join(__dirname, "..", "commands")
     if (!existsSync(commandsDir)) {
       console.error("Commands directory not found.")
       return []
@@ -42,7 +42,7 @@ export class CLI {
     )
     const commands: Command[] = []
     for (const file of commandFiles) {
-      const { default: CommandFunction } = require(join(commandsDir, file))
+      const { default: CommandFunction } = require(path.join(commandsDir, file))
       if (CommandFunction && typeof CommandFunction === "function") {
         const cmd = new CommandFunction()
         if (cmd instanceof Command) {
@@ -105,7 +105,7 @@ export class CLI {
         reader.releaseLock()
         return false
       } else {
-        console.log("Invalid input. Please answer 'y' or 'n'.")
+        console.error("Invalid input. Please answer 'y' or 'n'.")
       }
     }
   }
@@ -125,7 +125,7 @@ export class CLI {
       if (userInput === "" && !defaultYes) return false
       if (userInput === "y" || userInput === "yes") return true
       if (userInput === "n" || userInput === "no") return false
-      console.log("Invalid input. Please answer 'y' or 'n'.")
+      console.error("Invalid input. Please answer 'y' or 'n'.")
     }
   }
 
@@ -146,7 +146,7 @@ export class CLI {
           return options[selectedIndex - 1]
         }
       }
-      console.log(
+      console.error(
         "Invalid input. Please enter a valid number corresponding to the options listed."
       )
     }
@@ -155,7 +155,7 @@ export class CLI {
   // === Utility Methods ===
   static getVersion(): string | null {
     try {
-      const packageJsonPath = join(process.cwd(), "package.json")
+      const packageJsonPath = path.join(process.cwd(), "package.json")
       const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"))
       return packageJson.version
     } catch {
