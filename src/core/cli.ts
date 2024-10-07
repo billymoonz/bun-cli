@@ -1,4 +1,4 @@
-import { readdirSync } from "fs"
+import { readdirSync, readFileSync } from "fs"
 import { join } from "path"
 import { Config } from "@/utils/config"
 import { Command } from "@/core/command"
@@ -58,6 +58,17 @@ export class CLI {
       }
     }
     return null
+  }
+
+  static getVersion(): string | null {
+    try {
+      const packageJsonPath = join(process.cwd(), "package.json")
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"))
+      return packageJson.version
+    } catch {
+      console.error("An error occurred loading CLI version.")
+      return null
+    }
   }
 
   static parseArgs(
