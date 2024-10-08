@@ -152,6 +152,17 @@ export class CLI {
     }
   }
 
+  static async input(question: string): Promise<string> {
+    const reader = Bun.stdin.stream().getReader()
+    console.log(question)
+    while (true) {
+      const { value } = await reader.read()
+      const userInput = new TextDecoder().decode(value).trim()
+      reader.releaseLock()
+      return userInput
+    }
+  }
+
   // === Utility Methods ===
   static getVersion(): string | null {
     try {
